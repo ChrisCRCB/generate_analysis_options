@@ -37,6 +37,9 @@ class GenerateAnalysisOptionsScreenState
   /// The rules to use.
   late final List<String> rules;
 
+  /// The most recently selected rule name.
+  String? _recentRule;
+
   /// Initialise state.
   @override
   void initState() {
@@ -61,65 +64,71 @@ class GenerateAnalysisOptionsScreenState
 
   /// Build a widget.
   @override
-  Widget build(final BuildContext context) => CallbackShortcuts(
-        bindings: {
-          SingleActivator(
-            LogicalKeyboardKey.keyS,
-            control: useControlKey,
-            meta: useMetaKey,
-          ): save,
-        },
-        child: SimpleScaffold(
-          title: 'Analysis Options',
-          body: LinterRulesBuilder(
-            builder: (final context, final linterRules) {
-              if (linterRules.isEmpty) {
-                return const CenterText(
-                  text: 'No rules could be loaded.',
-                  autofocus: true,
-                );
-              }
-              linterRules.sort(
-                (final a, final b) =>
-                    a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-              );
-              return ListView.builder(
-                shrinkWrap: true,
-                itemCount: linterRules.length,
-                itemBuilder: (final context, final index) {
-                  final rule = linterRules[index];
-                  final ruleName = rule.name;
-                  return CallbackShortcuts(
-                    bindings: {
-                      SingleActivator(
-                        LogicalKeyboardKey.keyK,
-                        control: useControlKey,
-                        meta: useMetaKey,
-                      ): () => launchUrl(rule.uri),
-                    },
-                    child: ListTile(
-                      selected: rules.contains(ruleName),
-                      onTap: () {
-                        if (rules.contains(ruleName)) {
-                          rules.remove(ruleName);
-                        } else {
-                          rules.add(ruleName);
-                        }
-                        setState(() {});
-                      },
-                      autofocus: index == 0,
-                      title: Text(rule.description),
-                      subtitle: Text(rule.name),
-                    ),
+  Widget build(final BuildContext context) => Cancel(
+        child: CallbackShortcuts(
+          bindings: {
+            SingleActivator(
+              LogicalKeyboardKey.keyS,
+              control: useControlKey,
+              meta: useMetaKey,
+            ): save,
+          },
+          child: SimpleScaffold(
+            title: 'Analysis Options',
+            body: LinterRulesBuilder(
+              builder: (final context, final linterRules) {
+                if (linterRules.isEmpty) {
+                  return const CenterText(
+                    text: 'No rules could be loaded.',
+                    autofocus: true,
                   );
-                },
-              );
-            },
-          ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: save,
-            tooltip: 'Save',
-            child: const Icon(Icons.save_outlined),
+                }
+                linterRules.sort(
+                  (final a, final b) => a.name.toLowerCase().compareTo(
+                        b.name.toLowerCase(),
+                      ),
+                );
+                return ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: linterRules.length,
+                  itemBuilder: (final context, final index) {
+                    final rule = linterRules[index];
+                    final ruleName = rule.name;
+                    return CallbackShortcuts(
+                      bindings: {
+                        SingleActivator(
+                          LogicalKeyboardKey.keyK,
+                          control: useControlKey,
+                          meta: useMetaKey,
+                        ): () => launchUrl(rule.uri),
+                      },
+                      child: ListTile(
+                        selected: rules.contains(ruleName),
+                        onTap: () {
+                          _recentRule = rule.name;
+                          if (rules.contains(ruleName)) {
+                            rules.remove(ruleName);
+                          } else {
+                            rules.add(ruleName);
+                          }
+                          setState(() {});
+                        },
+                        autofocus: _recentRule == null
+                            ? index == 0
+                            : rule.name == _recentRule,
+                        title: Text(rule.description),
+                        subtitle: Text(rule.name),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+            floatingActionButton: FloatingActionButton(
+              onPressed: save,
+              tooltip: 'Save',
+              child: const Icon(Icons.save_outlined),
+            ),
           ),
         ),
       );
